@@ -636,6 +636,9 @@ namespace System.Windows.Controls
 			//System.Diagnostics.Debug.WriteLine(Environment.StackTrace);
 		}
 
+        Point maybeDragDropStartPosition;
+        int maybeDragDropClickCount;
+
 		protected override void OnMouseDown(MouseButtonEventArgs e)
 		{
 			//System.Diagnostics.Debug.WriteLine("MultiSelectTreeViewItem.OnMouseDown(Item = " + this.DisplayName + ", Button = " + e.ChangedButton + ")");
@@ -650,7 +653,15 @@ namespace System.Windows.Controls
 
 			if (e.ChangedButton == MouseButton.Left)
 			{
-				ParentTreeView.Selection.Select(this);
+                if (!IsSelected)
+                {
+                    ParentTreeView.Selection.Select(this);
+                }
+                else
+                {
+                    maybeDragDropStartPosition = e.GetPosition(null);
+                    maybeDragDropClickCount = e.ClickCount;
+                }
 				e.Handled = true;
 			}
 			if (e.ChangedButton == MouseButton.Right)
@@ -663,7 +674,24 @@ namespace System.Windows.Controls
 			}
 		}
 
-		protected override void OnItemsChanged(NotifyCollectionChangedEventArgs e)
+        protected override void OnMouseUp(MouseButtonEventArgs e)
+        {
+            //System.Diagnostics.Debug.WriteLine("MultiSelectTreeViewItem.OnMouseUp(Item = " + this.DisplayName + ", Button = " + e.ChangedButton + ")");
+            base.OnMouseUp(e);
+
+            if (e.ChangedButton == MouseButton.Left && e.ClickCount == maybeDragDropClickCount)
+            {
+                var diff = maybeDragDropStartPosition - e.GetPosition(null);
+                // Only reset selection if this is not a drag'n'drop movement
+                if (Math.Abs(diff.X) < SystemParameters.MinimumHorizontalDragDistance && Math.Abs(diff.Y) < SystemParameters.MinimumVerticalDragDistance)
+                {
+                    ParentTreeView.Selection.Select(this);
+                    e.Handled = true;
+                }
+            }
+        }
+
+        protected override void OnItemsChanged(NotifyCollectionChangedEventArgs e)
 		{
 			MultiSelectTreeView parentTV;
 
