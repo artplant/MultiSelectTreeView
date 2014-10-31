@@ -251,9 +251,8 @@ namespace System.Windows.Controls
 		{
 			base.OnApplyTemplate();
 
+            Selection.Dispose();
 			Selection.ApplyTemplate();
-
-			Unloaded += OnUnLoaded;
 		}
 
 		public bool ClearSelection()
@@ -683,13 +682,6 @@ namespace System.Windows.Controls
 			}
 
 			OnSelectionChanged();
-		}
-
-		private void OnUnLoaded(object sender, RoutedEventArgs e)
-		{
-			Unloaded -= OnUnLoaded;
-			if (Selection != null)
-				Selection.Dispose();
 		}
 
 		protected override void OnKeyDown(KeyEventArgs e)
