@@ -1,10 +1,11 @@
 ﻿namespace System.Windows.Controls
 {
-    internal interface ISelectionStrategy : IDisposable
+    internal interface ISelectionStrategy
     {
 		event EventHandler<PreviewSelectionChangedEventArgs> PreviewSelectionChanged;
 		
 		void ApplyTemplate();
+        void Cleanup();
         bool SelectCore(MultiSelectTreeViewItem owner);
         bool Deselect(MultiSelectTreeViewItem item, bool bringIntoView = false);
         bool SelectPreviousFromKey();

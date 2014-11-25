@@ -15,11 +15,12 @@ namespace System.Windows.Controls
 
 		private readonly MultiSelectTreeView treeView;
 		private BorderSelectionLogic borderSelectionLogic;
-		private object lastShiftRoot;
+		private WeakReference lastShiftRoot;
 
 		public SelectionMultiple(MultiSelectTreeView treeView)
 		{
 			this.treeView = treeView;
+            this.lastShiftRoot = new WeakReference(null);
 		}
 
 		#region Properties
@@ -82,7 +83,7 @@ namespace System.Windows.Controls
 				{
 					// Requested to select the single already-selected item. Don't change the selection.
 					FocusHelper.Focus(item, true);
-					lastShiftRoot = item.DataContext;
+					lastShiftRoot.Target = item.DataContext;
 					return true;
 				}
 				else
@@ -98,7 +99,7 @@ namespace System.Windows.Controls
 			OnPreviewSelectionChanged(e);
 			if (e.CancelAny)
 			{
-				lastShiftRoot = item.DataContext;
+				lastShiftRoot.Target = item.DataContext;
 				return false;
 			}
 
@@ -106,7 +107,7 @@ namespace System.Windows.Controls
 			{
 				treeView.SelectedItems.Add(item.DataContext);
 			}
-			lastShiftRoot = item.DataContext;
+            lastShiftRoot.Target = item.DataContext;
 			return true;
 		}
 
@@ -116,14 +117,14 @@ namespace System.Windows.Controls
 			OnPreviewSelectionChanged(e);
 			if (e.CancelAny)
 			{
-				lastShiftRoot = item.DataContext;
+                lastShiftRoot.Target = item.DataContext;
 				return false;
 			}
 
 			treeView.SelectedItems.Remove(item.DataContext);
-			if (item.DataContext == lastShiftRoot)
+			if (item.DataContext == lastShiftRoot.Target)
 			{
-				lastShiftRoot = null;
+				lastShiftRoot.Target = null;
 			}
 			return true;
 		}
@@ -136,11 +137,11 @@ namespace System.Windows.Controls
 				{
 					treeView.SelectedItems.Add(item.DataContext);
 				}
-				lastShiftRoot = item.DataContext;
+                lastShiftRoot.Target = item.DataContext;
 			}
 			else if (IsShiftKeyDown && treeView.SelectedItems.Count > 0)
 			{
-				object firstSelectedItem = lastShiftRoot ?? treeView.SelectedItems.First();
+				object firstSelectedItem = lastShiftRoot.Target ?? treeView.SelectedItems.First();
 				MultiSelectTreeViewItem shiftRootItem = treeView.GetTreeViewItemsFor(new List<object> { firstSelectedItem }).First();
 
 				var newSelection = treeView.GetNodesToSelectBetween(shiftRootItem, item).Select(n => n.DataContext).ToList();
@@ -189,7 +190,7 @@ namespace System.Windows.Controls
 						if (e2.CancelAll)
 						{
 							FocusHelper.Focus(item);
-							lastShiftRoot = item.DataContext;
+                            lastShiftRoot.Target = item.DataContext;
 							return false;
 						}
 						if (!e2.CancelThis)
@@ -204,12 +205,12 @@ namespace System.Windows.Controls
 				if (e.CancelAny)
 				{
 					FocusHelper.Focus(item, true);
-					lastShiftRoot = item.DataContext;
+                    lastShiftRoot.Target = item.DataContext;
 					return false;
 				}
 
 				treeView.SelectedItems.Add(item.DataContext);
-				lastShiftRoot = item.DataContext;
+                lastShiftRoot.Target = item.DataContext;
 			}
 
 			FocusHelper.Focus(item, true);
@@ -383,23 +384,21 @@ namespace System.Windows.Controls
 			if (e.CancelAny) return false;
 
 			treeView.SelectedItems.Remove(item.DataContext);
-			if (item.DataContext == lastShiftRoot)
+			if (item.DataContext == lastShiftRoot.Target)
 			{
-				lastShiftRoot = null;
+				lastShiftRoot.Target = null;
 			}
 			FocusHelper.Focus(item, bringIntoView);
 			return true;
 		}
 
-		public void Dispose()
+		public void Cleanup()
 		{
 			if (borderSelectionLogic != null)
 			{
-				borderSelectionLogic.Dispose();
+				borderSelectionLogic.Cleanup();
 				borderSelectionLogic = null;
 			}
-
-			GC.SuppressFinalize(this);
 		}
 
 		protected void OnPreviewSelectionChanged(PreviewSelectionChangedEventArgs e)

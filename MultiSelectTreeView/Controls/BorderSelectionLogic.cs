@@ -4,7 +4,7 @@ using System.Windows.Input;
 
 namespace System.Windows.Controls
 {
-	internal class BorderSelectionLogic : IDisposable
+	internal class BorderSelectionLogic
 	{
 		#region Private fields
 
@@ -64,7 +64,7 @@ namespace System.Windows.Controls
 
 		#region Public methods
 
-		public void Dispose()
+		public void Cleanup()
 		{
 			if (treeView != null)
 			{
@@ -75,7 +75,6 @@ namespace System.Windows.Controls
 				treeView.KeyUp -= OnKeyUp;
 				treeView = null;
 			}
-			GC.SuppressFinalize(this);
 		}
 
 		#endregion Public methods

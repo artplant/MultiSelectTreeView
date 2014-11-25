@@ -251,7 +251,7 @@ namespace System.Windows.Controls
 		{
 			base.OnApplyTemplate();
 
-            Selection.Dispose();
+            Selection.Cleanup();
 			Selection.ApplyTemplate();
 		}
 
